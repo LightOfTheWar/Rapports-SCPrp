@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de Service</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="left-panel">
+        <h2>Actions</h2>
+        <div id="actions"></div>
+        <button class="event-end" onclick="addEventEnd()">Fin d'un événement</button>
+    </div>
+
+    <div class="right-panel">
+        <textarea id="reportBox" readonly></textarea>
+    </div>
+
+</div>
+
+<div class="bottom-bar">
+    <button onclick="startService()">Prendre service</button>
+    <button onclick="endService()">Fin de service</button>
+    <button onclick="copyReport()">Copier le rapport</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
