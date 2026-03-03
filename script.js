@@ -4,66 +4,174 @@ let currentDepartment = null;
 let currentTemplate = null;
 let freeMode = false;
 
-/*
-========================================
-SECTEURS UNIVERSELS
-========================================
-*/
+/* =========================================
+   SECTEURS UNIVERSELS
+========================================= */
 
 const UNIVERSAL_SECTORS = [
-    "Gate A",
-    "Gate B",
-    "Zone de Confinement",
-    "Carcérale",
-    "Laboratoire",
+    "Sécuritaire",
     "Administratif",
+    "Zone de Confinement",
+    "DI&ST",
+    "Carcérale",
+    "Gate A",
     "Surface",
     "Autre"
 ];
 
-/*
-========================================
-CONFIG DÉPARTEMENTS
-========================================
-*/
+/* =========================================
+   CONFIGURATION COMPLETE
+========================================= */
 
 const CONFIG = {
 
     "Sécuritaire": {
-        roles: ["Agent", "Sergent", "Caporal", "Classe-D"],
-        reasons: ["Refus d'obtempérer", "Comportement suspect", "Infraction", "Autre"],
+        roles: [
+            "Recrue Carcérale",
+            "Agent Carcéral",
+            "Superviseur Carcéral",
+            "Chef Carcéral",
+            "Caporal UT",
+            "Sergent UT",
+            "APR",
+            "APR WL",
+            "Lieutenant UT",
+            "Colonel UT",
+            "Marshal"
+        ],
+        reasons: [
+            "Refus d'obtempérer",
+            "Infraction",
+            "Comportement suspect",
+            "Tentative d'évasion",
+            "Autre"
+        ],
         actions: {
             simple: {
+                "Fuite ventilation": "Un Classe-D a tenté de s'échapper par la ventilation et a été neutralisé.",
+                "Franchissement ligne rouge": "Un Classe-D a franchi la ligne rouge et a été abattu.",
                 "Émeute": "Une émeute de Classe-D a éclaté.",
-                "SCP déconf": "Un SCP est sorti de son confinement."
+                "Combat IC": "Un combat armé impliquant des IC a eu lieu.",
+                "SCP déconf": "Un SCP a été détecté hors confinement.",
+                "Panne générateurs": "Les générateurs sont tombés en panne."
             },
             role: {
                 "Exécution": "{role} a été exécuté.",
-                "ISO": "{role} a été placé en isolement."
+                "TAZE": "{role} a été neutralisé au TAZER.",
+                "ISO": "{role} a été placé en isolement.",
+                "Rappel à l'ordre": "{role} a été rappelé à l'ordre."
             }
         }
     },
 
     "Scientifique": {
-        roles: ["Scientifique", "Superviseur", "Chercheur"],
-        reasons: ["Erreur de manipulation", "Test dangereux", "Violation protocole", "Autre"],
+        roles: [
+            "Scientifique",
+            "Scientifique Avancé",
+            "Superviseur Scientifique"
+        ],
+        reasons: [
+            "Erreur de manipulation",
+            "Test dangereux",
+            "Violation protocole",
+            "Autre"
+        ],
         actions: {
             simple: {
-                "Test SCP": "Un test SCP a été effectué."
+                "Test SCP": "Un test sur un SCP a été effectué.",
+                "Incident labo": "Un incident a eu lieu en laboratoire."
             },
             role: {
-                "Incident": "{role} a provoqué un incident."
+                "Sanction": "{role} a reçu une sanction disciplinaire.",
+                "Mise en quarantaine": "{role} a été placé en quarantaine."
+            }
+        }
+    },
+
+    "Administratif": {
+        roles: [
+            "Agent Administratif",
+            "Secrétaire",
+            "Directeur"
+        ],
+        reasons: [
+            "Non respect protocole",
+            "Erreur administrative",
+            "Autre"
+        ],
+        actions: {
+            simple: {
+                "Réunion": "Une réunion administrative a eu lieu.",
+                "Audit": "Un audit interne a été réalisé."
+            },
+            role: {
+                "Sanction": "{role} a reçu un avertissement officiel.",
+                "Promotion": "{role} a été promu."
+            }
+        }
+    },
+
+    "DI&ST": {
+        roles: [
+            "Agent d'entretien",
+            "Technicien",
+            "Ingénieur"
+        ],
+        reasons: [
+            "Maintenance urgente",
+            "Panne système",
+            "Autre"
+        ],
+        actions: {
+            simple: {
+                "Réparation": "Une réparation technique a été effectuée.",
+                "Maintenance": "Une maintenance système a été réalisée."
+            },
+            role: {
+                "Intervention": "{role} est intervenu sur une panne critique."
+            }
+        }
+    },
+
+    "Classe-D": {
+        roles: ["Classe-D"],
+        reasons: [
+            "Non respect consignes",
+            "Tentative d'évasion",
+            "Autre"
+        ],
+        actions: {
+            simple: {
+                "Transfert": "Un transfert de Classe-D a été effectué."
+            },
+            role: {
+                "Isolement": "{role} a été placé en cellule d'isolement."
+            }
+        }
+    },
+
+    "Insurrection du Chaos": {
+        roles: ["Membre IC"],
+        reasons: [
+            "Intrusion",
+            "Attaque armée",
+            "Autre"
+        ],
+        actions: {
+            simple: {
+                "Raid": "Un raid de l'Insurrection du Chaos a été signalé."
+            },
+            role: {
+                "Neutralisation": "{role} a été neutralisé."
             }
         }
     }
 
 };
 
-/*
-========================================
-INITIALISATION
-========================================
-*/
+/* =========================================
+   INITIALISATION
+========================================= */
 
 function init() {
     const deptSelect = document.getElementById("departmentSelect");
@@ -84,11 +192,9 @@ function updateReport() {
     document.getElementById("reportBox").value = rapport;
 }
 
-/*
-========================================
-SERVICE
-========================================
-*/
+/* =========================================
+   SERVICE
+========================================= */
 
 function startService() {
     currentDepartment = document.getElementById("departmentSelect").value;
@@ -113,19 +219,17 @@ function endService() {
     updateReport();
 }
 
-/*
-========================================
-BOUTONS DYNAMIQUES
-========================================
-*/
+/* =========================================
+   GÉNÉRATION DES BOUTONS
+========================================= */
 
 function generateButtons() {
+
     const container = document.getElementById("actionsContainer");
     container.innerHTML = "";
 
     const dept = CONFIG[currentDepartment];
 
-    // Actions simples
     Object.entries(dept.actions.simple).forEach(([name, text]) => {
         const btn = document.createElement("button");
         btn.textContent = name;
@@ -136,7 +240,6 @@ function generateButtons() {
         container.appendChild(btn);
     });
 
-    // Actions avec rôle
     Object.entries(dept.actions.role).forEach(([name, template]) => {
         const btn = document.createElement("button");
         btn.textContent = name;
@@ -144,18 +247,15 @@ function generateButtons() {
         container.appendChild(btn);
     });
 
-    // Bouton universel NOTE LIBRE
     const freeBtn = document.createElement("button");
     freeBtn.textContent = "Note libre (universelle)";
     freeBtn.onclick = () => openModal("Note libre", null, true);
     container.appendChild(freeBtn);
 }
 
-/*
-========================================
-MODAL
-========================================
-*/
+/* =========================================
+   MODAL
+========================================= */
 
 function openModal(title, template, isFreeMode) {
 
@@ -191,11 +291,20 @@ function fillSelect(id, items) {
     });
 }
 
-/*
-========================================
-CONFIRMATION ACTION
-========================================
-*/
+function handleReasonChange() {
+    const reason = document.getElementById("reasonSelect").value;
+    const customField = document.getElementById("customReason");
+
+    if (reason === "Autre") {
+        customField.style.display = "block";
+    } else {
+        customField.style.display = "none";
+    }
+}
+
+/* =========================================
+   CONFIRMATION ACTION
+========================================= */
 
 function confirmAction() {
 
@@ -204,7 +313,6 @@ function confirmAction() {
     let reason = document.getElementById("reasonSelect").value;
 
     if (reason === "Autre") {
-        document.getElementById("customReason").style.display = "block";
         reason = document.getElementById("customReason").value;
     }
 
@@ -220,11 +328,9 @@ function confirmAction() {
     closeModal();
 }
 
-/*
-========================================
-PDF
-========================================
-*/
+/* =========================================
+   PDF
+========================================= */
 
 function generatePDF() {
     const { jsPDF } = window.jspdf;
@@ -234,17 +340,6 @@ function generatePDF() {
     doc.text(lines, 10, 10);
 
     doc.save("rapport_service.pdf");
-}
-
-function handleReasonChange() {
-    const reason = document.getElementById("reasonSelect").value;
-    const customField = document.getElementById("customReason");
-
-    if (reason === "Autre") {
-        customField.style.display = "block";
-    } else {
-        customField.style.display = "none";
-    }
 }
 
 init();
