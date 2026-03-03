@@ -1,32 +1,96 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Rapport de Service</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de Service</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Librairie jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+
 <body>
 
-<div class="container">
+<div class="app">
 
-    <div class="left-panel">
-        <h2>Actions</h2>
-        <div id="actions"></div>
-        <button class="event-end" onclick="addEventEnd()">Fin d'un événement</button>
-    </div>
+    <!-- ================= HEADER ================= -->
 
-    <div class="right-panel">
-        <textarea id="reportBox" readonly></textarea>
-    </div>
+    <header>
+        <h1>Rapport de Service</h1>
+
+        <div class="service-controls">
+            <select id="departmentSelect"></select>
+
+            <input type="text"
+                   id="matriculeInput"
+                   placeholder="Matricule">
+
+            <button onclick="startService()">Prendre service</button>
+            <button onclick="endService()">Fin de service</button>
+            <button onclick="generatePDF()">Exporter PDF</button>
+        </div>
+    </header>
+
+    <!-- ================= MAIN ================= -->
+
+    <main>
+
+        <!-- Panel Actions -->
+        <div class="actions-panel">
+            <h2>Actions</h2>
+            <div id="actionsContainer"></div>
+        </div>
+
+        <!-- Panel Rapport -->
+        <div class="report-panel">
+            <textarea id="reportBox" readonly></textarea>
+        </div>
+
+    </main>
 
 </div>
 
-<div class="bottom-bar">
-    <button onclick="startService()">Prendre service</button>
-    <button onclick="endService()">Fin de service</button>
-    <button onclick="copyReport()">Copier le rapport</button>
+<!-- ================= MODAL ================= -->
+
+<div id="actionModal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <h3 id="modalTitle"></h3>
+
+        <!-- Rôle -->
+        <label>Rôle :</label>
+        <select id="roleSelect"></select>
+
+        <!-- Secteur (universel) -->
+        <label>Secteur :</label>
+        <select id="sectorSelect"></select>
+
+        <!-- Raison -->
+        <label>Raison :</label>
+        <select id="reasonSelect"
+                onchange="handleReasonChange()"></select>
+
+        <!-- Raison personnalisée -->
+        <textarea id="customReason"
+                  placeholder="Écrire la raison..."
+                  style="display:none;"></textarea>
+
+        <!-- Texte libre universel -->
+        <textarea id="freeText"
+                  placeholder="Écrire votre note libre..."
+                  style="display:none;"></textarea>
+
+        <button onclick="confirmAction()">Valider</button>
+        <button onclick="closeModal()">Annuler</button>
+
+    </div>
+
 </div>
 
 <script src="script.js"></script>
+
 </body>
 </html>

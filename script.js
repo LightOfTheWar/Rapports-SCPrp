@@ -1,58 +1,59 @@
 let startTime = null;
 let rapport = "";
 let currentDepartment = null;
+let currentTemplate = null;
+let freeMode = false;
 
 /*
 ========================================
-CONFIGURATION DYNAMIQUE DES DÉPARTEMENTS
+SECTEURS UNIVERSELS
 ========================================
-Pour ajouter un nouveau département :
-1. Copier un bloc
-2. Ajouter les actions
-Rien d’autre à modifier.
 */
 
-const DEPARTMENT_CONFIG = {
+const UNIVERSAL_SECTORS = [
+    "Gate A",
+    "Gate B",
+    "Zone de Confinement",
+    "Carcérale",
+    "Laboratoire",
+    "Administratif",
+    "Surface",
+    "Autre"
+];
+
+/*
+========================================
+CONFIG DÉPARTEMENTS
+========================================
+*/
+
+const CONFIG = {
 
     "Sécuritaire": {
-        simple: {
-            "Fuite ventilation": "Un Classe-D a tenté de s'échapper par la ventilation et a été neutralisé.",
-            "Franchissement ligne rouge": "Un Classe-D a franchi la ligne rouge et a été abattu.",
-            "Émeute": "Une émeute de Classe-D a éclaté.",
-            "SCP déconf": "Un SCP a été détecté en dehors de son confinement."
-        },
-
-        roleActions: {
-            "Exécution": "{role} a été exécuté.",
-            "TAZE": "{role} a été arrêté à l'aide du TAZER.",
-            "ISO": "{role} a été placé à l'isolement.",
-            "Combat armé": "{role} a été impliqué dans un combat armé."
+        roles: ["Agent", "Sergent", "Caporal", "Classe-D"],
+        reasons: ["Refus d'obtempérer", "Comportement suspect", "Infraction", "Autre"],
+        actions: {
+            simple: {
+                "Émeute": "Une émeute de Classe-D a éclaté.",
+                "SCP déconf": "Un SCP est sorti de son confinement."
+            },
+            role: {
+                "Exécution": "{role} a été exécuté.",
+                "ISO": "{role} a été placé en isolement."
+            }
         }
     },
 
     "Scientifique": {
-        simple: {
-            "Test SCP": "Un test sur un SCP a été effectué.",
-            "Incident laboratoire": "Un incident a eu lieu en laboratoire.",
-            "Manipulation dangereuse": "Une manipulation dangereuse a été signalée."
-        },
-
-        roleActions: {
-            "Expérience non autorisée": "{role} a effectué une expérience non autorisée.",
-            "Blessure en test": "{role} a été blessé durant un test.",
-            "Mise en quarantaine": "{role} a été placé en quarantaine."
-        }
-    },
-
-    "Administratif": {
-        simple: {
-            "Réunion direction": "Une réunion de direction a eu lieu.",
-            "Audit interne": "Un audit interne a été effectué."
-        },
-
-        roleActions: {
-            "Sanction disciplinaire": "{role} a reçu une sanction disciplinaire.",
-            "Promotion": "{role} a été promu."
+        roles: ["Scientifique", "Superviseur", "Chercheur"],
+        reasons: ["Erreur de manipulation", "Test dangereux", "Violation protocole", "Autre"],
+        actions: {
+            simple: {
+                "Test SCP": "Un test SCP a été effectué."
+            },
+            role: {
+                "Incident": "{role} a provoqué un incident."
+            }
         }
     }
 
@@ -60,9 +61,20 @@ const DEPARTMENT_CONFIG = {
 
 /*
 ========================================
-FONCTIONS PRINCIPALES
+INITIALISATION
 ========================================
 */
+
+function init() {
+    const deptSelect = document.getElementById("departmentSelect");
+
+    Object.keys(CONFIG).forEach(dept => {
+        const option = document.createElement("option");
+        option.value = dept;
+        option.textContent = dept;
+        deptSelect.appendChild(option);
+    });
+}
 
 function nowTime() {
     return new Date().toLocaleTimeString();
@@ -72,68 +84,51 @@ function updateReport() {
     document.getElementById("reportBox").value = rapport;
 }
 
+/*
+========================================
+SERVICE
+========================================
+*/
+
 function startService() {
+    currentDepartment = document.getElementById("departmentSelect").value;
+    const matricule = document.getElementById("matriculeInput").value;
 
-    const matricule = prompt("Matricule :") || "Inconnu";
-
-    const deptList = Object.keys(DEPARTMENT_CONFIG).join("\n");
-    const dept = prompt("Choisir un département :\n\n" + deptList);
-
-    if (!DEPARTMENT_CONFIG[dept]) {
-        alert("Département invalide.");
-        return;
-    }
-
-    currentDepartment = dept;
     startTime = new Date();
 
     rapport =
-        `RAPPORT DE SERVICE\n` +
+        `RAPPORT DE SERVICE\n\n` +
         `Date : ${startTime.toLocaleDateString()}\n` +
-        `Nom de code : ${matricule}\n` +
-        `Département : ${dept}\n` +
-        `Heure de prise de service : ${startTime.toLocaleTimeString()}\n\n` +
-        `RAPPORT :\n`;
+        `Matricule : ${matricule}\n` +
+        `Département : ${currentDepartment}\n` +
+        `Heure début : ${startTime.toLocaleTimeString()}\n\n` +
+        `Événements :\n`;
 
-    generateActionButtons();
+    generateButtons();
     updateReport();
 }
 
 function endService() {
-    if (!startTime) return;
-
-    rapport += `\nFin de service à : ${nowTime()}\n`;
-    updateReport();
-}
-
-function copyReport() {
-    navigator.clipboard.writeText(rapport);
-}
-
-function addEventEnd() {
-    if (!startTime) return;
-
-    rapport += `[${nowTime()}] Fin de l'événement.\n`;
+    rapport += `\nFin de service : ${nowTime()}\n`;
     updateReport();
 }
 
 /*
 ========================================
-GÉNÉRATION DYNAMIQUE DES BOUTONS
+BOUTONS DYNAMIQUES
 ========================================
 */
 
-function generateActionButtons() {
+function generateButtons() {
+    const container = document.getElementById("actionsContainer");
+    container.innerHTML = "";
 
-    const container = document.getElementById("actions");
-    container.innerHTML = ""; // reset
-
-    const config = DEPARTMENT_CONFIG[currentDepartment];
+    const dept = CONFIG[currentDepartment];
 
     // Actions simples
-    Object.entries(config.simple).forEach(([name, text]) => {
+    Object.entries(dept.actions.simple).forEach(([name, text]) => {
         const btn = document.createElement("button");
-        btn.innerText = name;
+        btn.textContent = name;
         btn.onclick = () => {
             rapport += `[${nowTime()}] ${text}\n`;
             updateReport();
@@ -142,28 +137,114 @@ function generateActionButtons() {
     });
 
     // Actions avec rôle
-    Object.entries(config.roleActions).forEach(([name, template]) => {
+    Object.entries(dept.actions.role).forEach(([name, template]) => {
         const btn = document.createElement("button");
-        btn.innerText = name;
-        btn.onclick = () => handleRoleAction(template);
+        btn.textContent = name;
+        btn.onclick = () => openModal(name, template, false);
         container.appendChild(btn);
+    });
+
+    // Bouton universel NOTE LIBRE
+    const freeBtn = document.createElement("button");
+    freeBtn.textContent = "Note libre (universelle)";
+    freeBtn.onclick = () => openModal("Note libre", null, true);
+    container.appendChild(freeBtn);
+}
+
+/*
+========================================
+MODAL
+========================================
+*/
+
+function openModal(title, template, isFreeMode) {
+
+    freeMode = isFreeMode;
+    currentTemplate = template;
+
+    const dept = CONFIG[currentDepartment];
+
+    document.getElementById("modalTitle").textContent = title;
+
+    fillSelect("roleSelect", dept.roles);
+    fillSelect("sectorSelect", UNIVERSAL_SECTORS);
+    fillSelect("reasonSelect", dept.reasons);
+
+    document.getElementById("customReason").style.display = "none";
+    document.getElementById("freeText").style.display = isFreeMode ? "block" : "none";
+
+    document.getElementById("actionModal").classList.remove("hidden");
+}
+
+function closeModal() {
+    document.getElementById("actionModal").classList.add("hidden");
+}
+
+function fillSelect(id, items) {
+    const select = document.getElementById(id);
+    select.innerHTML = "";
+    items.forEach(item => {
+        const option = document.createElement("option");
+        option.value = item;
+        option.textContent = item;
+        select.appendChild(option);
     });
 }
 
-function handleRoleAction(template) {
+/*
+========================================
+CONFIRMATION ACTION
+========================================
+*/
 
-    if (!startTime) return;
+function confirmAction() {
 
-    const role = prompt("Rôle concerné :");
-    const sector = prompt("Secteur :");
-    const reason = prompt("Raison (optionnel) :");
+    const role = document.getElementById("roleSelect").value;
+    const sector = document.getElementById("sectorSelect").value;
+    let reason = document.getElementById("reasonSelect").value;
 
-    let text = template.replace("{role}", role);
+    if (reason === "Autre") {
+        document.getElementById("customReason").style.display = "block";
+        reason = document.getElementById("customReason").value;
+    }
 
-    rapport += `[${nowTime()}] ${text}` +
-        (reason ? ` Raison : ${reason}.` : "") +
-        (sector ? ` (Secteur : ${sector}).` : "") +
-        `\n`;
+    if (freeMode) {
+        const freeText = document.getElementById("freeText").value;
+        rapport += `[${nowTime()}] ${freeText} (Secteur: ${sector})\n`;
+    } else {
+        let text = currentTemplate.replace("{role}", role);
+        rapport += `[${nowTime()}] ${text} (Secteur: ${sector}) - Raison: ${reason}\n`;
+    }
 
     updateReport();
+    closeModal();
 }
+
+/*
+========================================
+PDF
+========================================
+*/
+
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const lines = doc.splitTextToSize(rapport, 180);
+    doc.text(lines, 10, 10);
+
+    doc.save("rapport_service.pdf");
+}
+
+function handleReasonChange() {
+    const reason = document.getElementById("reasonSelect").value;
+    const customField = document.getElementById("customReason");
+
+    if (reason === "Autre") {
+        customField.style.display = "block";
+    } else {
+        customField.style.display = "none";
+    }
+}
+
+init();

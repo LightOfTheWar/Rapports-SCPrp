@@ -1,23 +1,50 @@
 body {
     margin: 0;
+    font-family: Arial, sans-serif;
     background: #1e1e1e;
     color: white;
-    font-family: Arial, sans-serif;
 }
 
-.container {
+header {
+    padding: 15px;
+    background: #2a2a2a;
+}
+
+.service-controls {
     display: flex;
-    height: 90vh;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-.left-panel {
+select, input, button {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+}
+
+button {
+    background: #444;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #666;
+}
+
+main {
+    display: flex;
+    height: 80vh;
+}
+
+.actions-panel {
     width: 300px;
     padding: 20px;
-    background: #2a2a2a;
+    background: #2f2f2f;
     overflow-y: auto;
 }
 
-.right-panel {
+.report-panel {
     flex: 1;
     padding: 20px;
 }
@@ -27,33 +54,29 @@ textarea {
     height: 100%;
     background: #111;
     color: white;
-    border: none;
     resize: none;
+    border: none;
     font-family: Consolas, monospace;
 }
 
-button {
-    width: 100%;
-    padding: 8px;
-    margin: 5px 0;
-    background: #444;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #666;
-}
-
-.bottom-bar {
-    height: 10vh;
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
     display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background: #2a2a2a;
+    justify-content: center;
+    align-items: center;
 }
 
-.event-end {
-    background: #9b2c2c;
+.modal-content {
+    background: #2a2a2a;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 300px;
+}
+
+.hidden {
+    display: none;
 }
